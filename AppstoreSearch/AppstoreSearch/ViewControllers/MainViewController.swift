@@ -21,10 +21,6 @@ class MainViewController: UITableViewController {
         searchControllerInit()
         navigationInit()
         
-        //
-        mainViewModel.test()
-        //
-        
         mainViewModel.fetchKeywords()
         mainViewModel.reloadTableViewClosure = { [weak self] in
             DispatchQueue.main.async {
@@ -49,17 +45,26 @@ class MainViewController: UITableViewController {
     func navigationInit() {
         title = "Search"
         navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
+        navigationItem.hidesSearchBarWhenScrolling = true
     }
     
-    func moveToSearchResultViewController() {
+    func moveToSearchResultViewController(_ term: String) {
         let searchResultStoryboard = UIStoryboard(name: "SearchResultList", bundle: nil)
         searchResultListViewController = searchResultStoryboard.instantiateViewController(withIdentifier: "SearchResultListViewController") as? SearchResultListViewController
         
-        keywordListViewController.addChild(searchResultListViewController)
-        keywordListViewController.view.frame = searchResultListViewController.view.frame
-        keywordListViewController.view.addSubview(searchResultListViewController.view)
-        searchResultListViewController.didMove(toParent: keywordListViewController)
+        searchResultListViewController.term = term
+        
+        if isEditing {
+            keywordListViewController.addChild(searchResultListViewController)
+            keywordListViewController.view.frame = searchResultListViewController.view.frame
+            keywordListViewController.view.addSubview(searchResultListViewController.view)
+            searchResultListViewController.didMove(toParent: keywordListViewController)
+        } else {
+            self.addChild(searchResultListViewController)
+            self.view.frame = searchResultListViewController.view.frame
+            self.view.addSubview(searchResultListViewController.view)
+            searchResultListViewController.didMove(toParent: self)
+        }
     }
 }
 
@@ -79,21 +84,32 @@ extension MainViewController: UISearchResultsUpdating {
 }
 
 extension MainViewController: UISearchBarDelegate {
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty {
+            if let searchResultListViewController = searchResultListViewController {
+                searchResultListViewController.removeFromParent()
+                searchResultListViewController.view.removeFromSuperview()
+            }
+        }
+    }
+    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if let keyword = searchBar.text {
             mainViewModel.setKeyword(keyword)
+            moveToSearchResultViewController(keyword)
         }
-        moveToSearchResultViewController()
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        
-        searchResultListViewController.willMove(toParent: nil)
-        searchResultListViewController.removeFromParent()
-        searchResultListViewController.view.removeFromSuperview()
-        
+        if let searchResultListViewController = searchResultListViewController {
+            searchResultListViewController.removeFromParent()
+            searchResultListViewController.view.removeFromSuperview()
+        }
+        isEditing = false
         mainViewModel.fetchKeywords()
     }
+    
 }
 
 extension MainViewController {
@@ -113,13 +129,17 @@ extension MainViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        var keyword = ""
+        
         if tableView == self.tableView {
-            let keyword = mainViewModel.keyword(at: indexPath.row)
-            searchController.searchBar.text = keyword
+            isEditing = false
+            keyword = mainViewModel.keyword(at: indexPath.row)
         } else {
-            let filteredKeyword = keywordListViewController.filteredKeywords[indexPath.row]
-            searchController.searchBar.text = filteredKeyword
+            isEditing = true
+            keyword = keywordListViewController.filteredKeywords[indexPath.row]
         }
-        moveToSearchResultViewController()
+        
+        searchController.searchBar.text = keyword
+        moveToSearchResultViewController(keyword)
     }
 }

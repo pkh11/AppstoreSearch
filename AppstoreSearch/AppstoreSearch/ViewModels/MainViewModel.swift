@@ -7,21 +7,17 @@
 
 import Foundation
 
-class MainViewModel {
-    
-    var appstoreSearchRepository = AppstoreSearchRepository()
+final class MainViewModel {
     
     let userDefaults = UserDefaults.standard
+    private var appstoreSearchRepository = AppstoreSearchRepository()
+    
     var reloadTableViewClosure: (()->())?
     
     private var recentKeywords: [String] = [] {
         didSet {
             self.reloadTableViewClosure?()
         }
-    }
-    
-    func test() {
-        appstoreSearchRepository.list()
     }
     
     func countOfKeywords() -> Int {
