@@ -15,8 +15,6 @@ class SearchResultListViewController: UITableViewController, UISearchBarDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationController?.navigationItem.hidesSearchBarWhenScrolling
-        
         searchResultViewModel.fetchDatas(term)
         searchResultViewModel.reloadTableViewClosure = {
             DispatchQueue.main.async {
@@ -41,5 +39,13 @@ extension SearchResultListViewController {
         cell.configure(data: app)
         
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "DetailView", bundle: nil)
+        guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "DetailViewController") as? DetailViewController else { return }
+        detailViewController.appInfo = searchResultViewModel.app(at: indexPath.row)
+        
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
 }
