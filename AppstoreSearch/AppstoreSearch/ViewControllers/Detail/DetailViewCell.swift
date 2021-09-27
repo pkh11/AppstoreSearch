@@ -26,59 +26,25 @@ class AppIconCell: UITableViewCell {
     }
 }
 
-class ComponentCell: UITableViewCell, UICollectionViewDelegate, UICollectionViewDataSource  {
-    @IBOutlet weak var collectionView: UICollectionView!
-    
-    struct Component {
-        var title: String?
-        var subTitle: String?
-        var detail: String?
-    }
-    
-    var components: [Component] = []
-    var appInfo: AppInfo? = AppInfo()
+class NewFeatureCell: UITableViewCell {
+    @IBOutlet weak var version: UILabel!
+    @IBOutlet weak var releaseNotes: UITextView!
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        collectionView.delegate = self
-        collectionView.dataSource = self
     }
-    
+ 
     func configure(data: AppInfo) {
-        appInfo = data
-    }
-    
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 4
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ComponentCollecionViewCell", for: indexPath) as? ComponentCollectionViewCell else { return UICollectionViewCell() }
-        
-        cell.componentTitle.text = "title"
-        cell.componentSubTitle.text = "4+"
-        cell.componentDetail.text = "세"
-        
-        return cell
-    }
-}
-
-class ComponentCollectionViewCell: UICollectionViewCell {
-    @IBOutlet weak var componentTitle: UILabel!
-    @IBOutlet weak var componentSubTitle: UILabel!
-    @IBOutlet weak var componentDetail: UILabel!
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
+        guard let versionInfo = data.version,
+                let releaseNote = data.releaseNotes else { return }
+        version.text = "버전 \(versionInfo)"
+        releaseNotes.text = releaseNote
     }
 }
 
 class PreviewCell: UITableViewCell, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
-    
     @IBOutlet weak var collectionView: UICollectionView!
-    
+
     var screenShots = [String]()
     
     override func awakeFromNib() {
@@ -110,9 +76,26 @@ class PreviewCell: UITableViewCell, UICollectionViewDelegate, UICollectionViewDa
 
 class PreviewCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var imageView: UIImageView!
-    
+
     override func awakeFromNib() {
         super.awakeFromNib()
         imageView.layer.cornerRadius = 10
+    }
+    
+    override func prepareForReuse() {
+        self.imageView.image = nil
+    }
+}
+
+class DescriptionCell: UITableViewCell {
+    @IBOutlet weak var appDescription: UITextView!
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+    }
+    
+    func configure(data: AppInfo) {
+        guard let description = data.description else { return }
+        appDescription.text = description
     }
 }

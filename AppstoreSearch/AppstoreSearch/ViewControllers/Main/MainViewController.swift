@@ -28,7 +28,7 @@ class MainViewController: UITableViewController {
             }
         }
     }
-    
+
     func keywordListInit() {
         let keywordListStoryboard = UIStoryboard(name: "KeywordList", bundle: nil)
         keywordListViewController = keywordListStoryboard.instantiateViewController(withIdentifier: "KeywordListViewController") as? KeywordListViewController
@@ -43,7 +43,7 @@ class MainViewController: UITableViewController {
     }
     
     func navigationInit() {
-        title = "Search"
+        title = "검색"
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = true
     }
@@ -54,17 +54,12 @@ class MainViewController: UITableViewController {
         
         searchResultListViewController.term = term
         
-        if isEditing {
-            keywordListViewController.addChild(searchResultListViewController)
-            keywordListViewController.view.frame = searchResultListViewController.view.frame
-            keywordListViewController.view.addSubview(searchResultListViewController.view)
-            searchResultListViewController.didMove(toParent: keywordListViewController)
-        } else {
-            self.addChild(searchResultListViewController)
-            self.view.frame = searchResultListViewController.view.frame
-            self.view.addSubview(searchResultListViewController.view)
-            searchResultListViewController.didMove(toParent: self)
-        }
+        self.addChild(searchResultListViewController)
+        self.view.frame = searchResultListViewController.view.frame
+        self.view.addSubview(searchResultListViewController.view)
+        searchResultListViewController.didMove(toParent: self)
+        keywordListViewController.dismiss(animated: true, completion: nil)
+        searchController.searchBar.showsCancelButton = true
     }
 }
 
@@ -103,10 +98,11 @@ extension MainViewController: UISearchBarDelegate {
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         if let searchResultListViewController = searchResultListViewController {
+            searchResultListViewController.willMove(toParent: self)
             searchResultListViewController.removeFromParent()
             searchResultListViewController.view.removeFromSuperview()
         }
-        isEditing = false
+        searchController.searchBar.endEditing(true)
         mainViewModel.fetchKeywords()
     }
     
@@ -132,10 +128,8 @@ extension MainViewController {
         var keyword = ""
         
         if tableView == self.tableView {
-            isEditing = false
             keyword = mainViewModel.keyword(at: indexPath.row)
         } else {
-            isEditing = true
             keyword = keywordListViewController.filteredKeywords[indexPath.row]
         }
         

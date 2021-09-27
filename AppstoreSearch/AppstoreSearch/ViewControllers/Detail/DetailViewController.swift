@@ -14,14 +14,21 @@ class DetailViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+    
+        tableView.rowHeight = UITableView.automaticDimension
         navigationController?.navigationBar.prefersLargeTitles = false
+    }
+}
+
+extension DetailViewController: ReloadDelegate {
+    func reload(_ index: IndexPath) {
+        tableView.reloadRows(at: [index], with: .automatic)
     }
 }
 
 extension DetailViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return 4
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -32,25 +39,20 @@ extension DetailViewController {
             
             return cell
         } else if indexPath.row == 1 {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: "ComponentCell") as? ComponentCell else { return UITableViewCell() }
-        
-            
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "NewFeatureCell") as? NewFeatureCell else { return UITableViewCell() }
+            cell.configure(data: appInfo)
             return cell
-        } else {
+        } else if indexPath.row == 2 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "PreviewCell") as? PreviewCell else { return UITableViewCell() }
             
             cell.configure(data: appInfo)
             
             return cell
-        }
-    }
-    
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.row == 2 {
-            return 1000
         } else {
-            return tableView.estimatedRowHeight
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "DescriptionCell") as? DescriptionCell else { return UITableViewCell() }
+            cell.configure(data: appInfo)
+
+            return cell
         }
     }
 }

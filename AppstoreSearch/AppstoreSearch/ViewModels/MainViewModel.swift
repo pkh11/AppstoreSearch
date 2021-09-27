@@ -9,9 +9,7 @@ import Foundation
 
 final class MainViewModel {
     
-    let userDefaults = UserDefaults.standard
     private var appstoreSearchRepository = AppstoreSearchRepository()
-    
     var reloadTableViewClosure: (()->())?
     
     private var recentKeywords: [String] = [] {
@@ -33,21 +31,10 @@ final class MainViewModel {
     }
     
     func setKeyword(_ keyword: String) {
-        if var savedKeywords = userDefaults.object(forKey: "keywords") as? [String] {
-            savedKeywords.insert(keyword, at: 0)
-            userDefaults.set(savedKeywords, forKey: "keywords")
-        } else {
-            userDefaults.set([keyword], forKey: "keywords")
-        }
+        appstoreSearchRepository.setKeyword(keyword)
     }
     
     func fetchKeywords() {
-        if let savedKeywords = userDefaults.object(forKey: "keywords") as? [String] {
-            recentKeywords = savedKeywords
-        }
-    }
-    
-    func fetchResults() {
-        
+        recentKeywords = appstoreSearchRepository.fetchKeywords()
     }
 }

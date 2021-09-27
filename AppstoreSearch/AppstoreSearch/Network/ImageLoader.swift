@@ -31,7 +31,8 @@ class ImageLoader {
                     }
                     
                     DispatchQueue.main.async {
-                        if let data = data, let image = UIImage(data: data) {
+                        if let data = data,
+                            let image = UIImage(data: data) {
                             CacheManager.sharedInstance.setObject(image, forKey: cacheKey)
                             completed(image)
                         }

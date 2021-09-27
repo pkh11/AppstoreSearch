@@ -31,9 +31,4 @@ extension KeywordListViewController {
         
         return cell
     }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("keyword \(indexPath.row)")
-        
-    }
 }

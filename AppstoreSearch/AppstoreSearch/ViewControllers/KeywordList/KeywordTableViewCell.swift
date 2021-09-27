@@ -8,7 +8,6 @@
 import UIKit
 
 class KeywordTableViewCell: UITableViewCell {
-    
     @IBOutlet weak var keywordText: UILabel!
     
     override func awakeFromNib() {

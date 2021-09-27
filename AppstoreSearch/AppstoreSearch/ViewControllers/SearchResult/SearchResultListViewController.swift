@@ -46,6 +46,6 @@ extension SearchResultListViewController {
         guard let detailViewController = storyboard.instantiateViewController(withIdentifier: "DetailViewController") as? DetailViewController else { return }
         detailViewController.appInfo = searchResultViewModel.app(at: indexPath.row)
         
-        navigationController?.pushViewController(detailViewController, animated: true)
+        self.navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

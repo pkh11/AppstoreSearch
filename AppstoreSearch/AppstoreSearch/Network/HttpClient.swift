@@ -33,15 +33,11 @@ class HttpClient {
                 if let reponseData = response as? HTTPURLResponse {
                     if reponseData.statusCode == 200 {
                         completion(Result.success(data!))
-                    } else {
-                        print("Status Code is not 200")
-                    }
+                    } 
                 } else {
                     completion(Result.failure(error!))
                 }
             }.resume()
         }
     }
-    
-    
 }
