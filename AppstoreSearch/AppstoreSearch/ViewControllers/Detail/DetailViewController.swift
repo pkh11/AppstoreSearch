@@ -14,15 +14,6 @@ class DetailViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-    
-        tableView.rowHeight = UITableView.automaticDimension
-        navigationController?.navigationBar.prefersLargeTitles = false
-    }
-}
-
-extension DetailViewController: ReloadDelegate {
-    func reload(_ index: IndexPath) {
-        tableView.reloadRows(at: [index], with: .automatic)
     }
 }
 

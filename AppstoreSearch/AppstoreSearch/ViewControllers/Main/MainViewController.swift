@@ -9,17 +9,16 @@ import UIKit
 
 class MainViewController: UITableViewController {
 
-    private var keywordListViewController: KeywordListViewController!
     private var searchResultListViewController: SearchResultListViewController!
-    var searchController: UISearchController!
+    let searchController = UISearchController(searchResultsController: nil)
     let mainViewModel = MainViewModel()
+    
+    var searchResults: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        keywordListInit()
-        searchControllerInit()
-        navigationInit()
+
+        configureSearchController()
         
         mainViewModel.fetchKeywords()
         mainViewModel.reloadTableViewClosure = { [weak self] in
@@ -28,24 +27,13 @@ class MainViewController: UITableViewController {
             }
         }
     }
+}
 
-    func keywordListInit() {
-        let keywordListStoryboard = UIStoryboard(name: "KeywordList", bundle: nil)
-        keywordListViewController = keywordListStoryboard.instantiateViewController(withIdentifier: "KeywordListViewController") as? KeywordListViewController
-        keywordListViewController.tableView.delegate = self
-    }
-    
-    func searchControllerInit() {
-        searchController = UISearchController(searchResultsController: keywordListViewController)
+extension MainViewController {
+    func configureSearchController() {
+        navigationItem.searchController = searchController
         searchController.searchResultsUpdater = self
         searchController.searchBar.delegate = self
-        definesPresentationContext = true
-    }
-    
-    func navigationInit() {
-        title = "검색"
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = true
     }
     
     func moveToSearchResultViewController(_ term: String) {
@@ -53,42 +41,40 @@ class MainViewController: UITableViewController {
         searchResultListViewController = searchResultStoryboard.instantiateViewController(withIdentifier: "SearchResultListViewController") as? SearchResultListViewController
         
         searchResultListViewController.term = term
+        searchController.isActive = true
         
         self.addChild(searchResultListViewController)
         self.view.frame = searchResultListViewController.view.frame
         self.view.addSubview(searchResultListViewController.view)
-        searchResultListViewController.didMove(toParent: self)
-        keywordListViewController.dismiss(animated: true, completion: nil)
-        searchController.searchBar.showsCancelButton = true
+    }
+    
+    func isSearchBarEmpty() -> Bool {
+        return searchController.searchBar.text?.isEmpty ?? true
+    }
+    
+    func isFiltering() -> Bool {
+        return searchController.isActive && !isSearchBarEmpty()
     }
 }
 
 extension MainViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        guard let text = searchController.searchBar.text else {
+        guard let text = searchController.searchBar.text, !text.isEmpty else {
             return
         }
         
-        let filteredKeywords = mainViewModel.filteredKeywords(keyword: text)
-        
-        if let keywordListViewController = searchController.searchResultsController as? KeywordListViewController {
-            keywordListViewController.filteredKeywords = filteredKeywords
-            keywordListViewController.tableView.reloadData()
+        if let searchResultListViewController = searchResultListViewController {
+            searchResultListViewController.willMove(toParent: self)
+            searchResultListViewController.removeFromParent()
+            searchResultListViewController.view.removeFromSuperview()
         }
+        
+        searchResults = mainViewModel.filteredKeywords(keyword: text)
+        tableView.reloadData()
     }
 }
 
 extension MainViewController: UISearchBarDelegate {
-    
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchText.isEmpty {
-            if let searchResultListViewController = searchResultListViewController {
-                searchResultListViewController.removeFromParent()
-                searchResultListViewController.view.removeFromSuperview()
-            }
-        }
-    }
-    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if let keyword = searchBar.text {
             mainViewModel.setKeyword(keyword)
@@ -102,15 +88,42 @@ extension MainViewController: UISearchBarDelegate {
             searchResultListViewController.removeFromParent()
             searchResultListViewController.view.removeFromSuperview()
         }
-        searchController.searchBar.endEditing(true)
+        
+        searchResults = []
         mainViewModel.fetchKeywords()
     }
-    
 }
 
 extension MainViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return mainViewModel.countOfKeywords()
+        if isFiltering() {
+            return searchResults.count
+        } else {
+            return mainViewModel.countOfKeywords()
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerView = UIView()
+        headerView.backgroundColor = .systemBackground
+        
+        let headerText = UILabel()
+        headerText.text = "새로운 발견"
+        headerText.font = .systemFont(ofSize: 20)
+        headerText.textAlignment = .left
+        
+        headerView.addSubview(headerText)
+        
+        headerText.translatesAutoresizingMaskIntoConstraints = false
+        headerText.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 18).isActive = true
+        headerText.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: 18).isActive = true
+        headerText.centerYAnchor.constraint(equalTo: headerView.centerYAnchor).isActive = true
+        
+        return headerView
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 50.0
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -118,8 +131,14 @@ extension MainViewController {
             return UITableViewCell()
         }
         
-        let keyword = mainViewModel.keyword(at: indexPath.row)
-        cell.searchedText.text = keyword
+        if isFiltering() {
+            cell.searchedText.text = searchResults[indexPath.row]
+            cell.searchIcon.isHidden = false
+        } else {
+            cell.searchedText.text = mainViewModel.keyword(at: indexPath.row)
+            cell.searchedText.textColor = .black
+            cell.searchIcon.isHidden = true
+        }
         
         return cell
     }
@@ -127,10 +146,10 @@ extension MainViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         var keyword = ""
         
-        if tableView == self.tableView {
-            keyword = mainViewModel.keyword(at: indexPath.row)
+        if isFiltering() {
+            keyword = searchResults[indexPath.row]
         } else {
-            keyword = keywordListViewController.filteredKeywords[indexPath.row]
+            keyword = mainViewModel.keyword(at: indexPath.row)
         }
         
         searchController.searchBar.text = keyword

@@ -8,9 +8,11 @@
 import UIKit
 
 class MainTableViewCell: UITableViewCell {
+    @IBOutlet weak var searchIcon: UIImageView!
     @IBOutlet weak var searchedText: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        searchIcon.isHidden = true
     }
 }

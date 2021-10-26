@@ -10,17 +10,31 @@ import UIKit
 class SearchResultListViewController: UITableViewController, UISearchBarDelegate {
     
     private var searchResultViewModel = SearchResultViewModel()
+    let activity = UIActivityIndicatorView()
     var term: String = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        indicatorInit()
+        
         searchResultViewModel.fetchDatas(term)
-        searchResultViewModel.reloadTableViewClosure = {
+        searchResultViewModel.reloadTableViewClosure = { [weak self] in
             DispatchQueue.main.async {
-                self.tableView.reloadData()
+                self?.activity.stopAnimating()
+                self?.tableView.reloadData()
             }
         }
+    }
+    
+    func indicatorInit() {
+        view.addSubview(activity)
+        activity.tintColor = .red
+        activity.translatesAutoresizingMaskIntoConstraints = false
+        activity.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activity.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        
+        activity.startAnimating()
     }
 }
 
